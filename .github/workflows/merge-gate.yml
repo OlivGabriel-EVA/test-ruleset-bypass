@@ -1,0 +1,27 @@
+name: 'Merge Gate - Window Check'
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  merge-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check merge window
+        run: |
+          CURRENT_HOUR=$(TZ="America/Sao_Paulo" date +%H)
+          CURRENT_DAY=$(TZ="America/Sao_Paulo" date +%u)
+
+          echo "Dia da semana: $CURRENT_DAY (5=sexta)"
+          echo "Hora atual (BRT): $CURRENT_HOUR"
+
+          if [ "$CURRENT_DAY" -eq 5 ] && [ "$CURRENT_HOUR" -ge 20 ] && [ "$CURRENT_HOUR" -lt 23 ]; then
+            echo "Dentro da janela de merge. Merge permitido."
+            exit 0
+          else
+            echo "Fora da janela de merge (sexta 20:00-23:00 BRT)."
+            echo "O merge sera realizado automaticamente na proxima janela."
+            exit 1
+          fi
